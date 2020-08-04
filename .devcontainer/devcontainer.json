@@ -1,7 +1,7 @@
 {
     "name": "ASP.NET Core DevEnv1",
     "build": {
-        "dockerFile": "Dockerfile",
+        "dockerfile": "Dockerfile",
         "args": {}
     },
     "settings": {
