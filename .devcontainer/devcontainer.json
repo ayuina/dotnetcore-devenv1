@@ -15,6 +15,6 @@
       "MS-vsliveshare.vsliveshare",
       "VisualStudioExptTeam.vscodeintellicode"
     ],
-    "forwardPorts":[5000, 5001],
+    "forwardPorts":[5000, 5001, 8888],
     "postCreateCommand": "dotnet restore src/demoapp.sln"
 }
