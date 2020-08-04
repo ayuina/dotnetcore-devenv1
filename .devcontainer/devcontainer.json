@@ -1,0 +1,13 @@
+{
+    "name": "ASP.NET Core DevEnv1",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {}
+    },
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+		"ms-dotnettools.csharp"
+	]
+}
