@@ -13,5 +13,5 @@
       "VisualStudioExptTeam.vscodeintellicode"
     ],
     "forwardPorts":[5000, 5001],
-    "postCreateCommand": "dotnet restore"
+    "postCreateCommand": "dotnet restore src/demoapp.sln"
 }
