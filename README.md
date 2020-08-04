@@ -289,7 +289,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 ```
 
 では外部のコンテナを起動してみましょう。
-開発コンテナと並行して起動していることがわかりますね。
+開発コンテナと並行して起動していることがわかります。
 
 ```bash
 $ docker run -d -p 8888:80 nginx
@@ -307,3 +307,15 @@ $ curl http://localhost:8888
   ...
 
 ```
+
+なおこのポート 8888 もフォワードしてしまえば開発端末から localhost 経由でアクセスできるようになります。
+
+![port-mapping-outside-docker](./images/port-mapping-outside-docker.png)
+
+## 補足
+
+上記では試行錯誤をやりやすくするために、開発環境の構成変更を随時 Dockerfile や devcontainer.json に反映するスタイルをとっていますが、
+開発がある程度安定してくればこまめに開発環境のソフトウェア構成を変更することはないでしょう。
+その場合は開発コンテナ自体を Azure Container Registory 等に Push してバージョン管理してしまい、devcontainer.json では Dockerfile オプションではなくイメージを指定するオプションを利用したほうが処理速度的にも有利になります。
+また開発時に必要な依存サービスも定まってくると思いますので、その場合は Docker Compose を使用して開発コンテナを制御したほうが便利だと思います。
+
