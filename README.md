@@ -312,6 +312,11 @@ $ curl http://localhost:8888
 
 ![port-mapping-outside-docker](./images/port-mapping-outside-docker.png)
 
+## 参考情報
+
+- [Configureing environments](https://docs.microsoft.com/ja-jp/visualstudio/codespaces/reference/configuring)
+- [devcontainer.json reference](https://code.visualstudio.com/docs/remote/devcontainerjson-reference)
+
 ## 補足
 
 上記では試行錯誤をやりやすくするために、開発環境の構成変更を随時 Dockerfile や devcontainer.json に反映するスタイルをとっていますが、
