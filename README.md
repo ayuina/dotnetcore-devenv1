@@ -226,10 +226,84 @@ info: Microsoft.Hosting.Lifetime[0]
 
 ## 外部コンテナの起動
 
-アプリケーションの開発が進むと、依存するサービス（APIとかDatabaseとか）と接続した動作確認もしたくなってきますよね。
-開発コンテナにそれらの外部サービスもインストールしてしまうというのも１つの考え方ですが、コンテナイメージも大きくなってしまいますし、全ての開発者が利用するマスターとなるイメージを安易に汚したくはありません。
-同じ理由で開発コンテナの中に Docker を入れる（Docker-in-Docker）というのもあまりやりたくはありません。
+アプリケーションの開発が進むと、依存するサービス（API とか Database とか Cache とか）と接続した動作確認もしたくなってきますよね。
+開発コンテナにそれらの外部サービスもインストールしてしまうというのも１つの考え方ですが、コンテナイメージも大きくなってしまいますし、全ての開発者が利用するコンテナイメージを安易に汚したくはありません。
+同じ理由で開発コンテナの中に Docker を入れる（Docker-in-Docker）というのもいまいちですね。
 となれば開発コンテナの外に動作させる Docker-outside-of-Docker を使うのがよさそうです。
 
+![vscs-dood](./images/vscs-dood.png)
 
+これを実現するためには下記の作業が必要になります。
 
+- 開発コンテナ内に Docker CLI をインストールしておく（Dockerfile に記載）
+- ホストコンテナの /var/run/docker.sock を開発コンテナにマウントする（devcontainer.json に記載）
+
+Docker CLI のインストールには
+[本家](https://docs.docker.com/engine/install/ubuntu/)を参照するのが良いと思います。
+
+実際の Dockerfile は下記のようになりました。
+
+```Dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:5.0-focal
+
+RUN apt-get update -yq \
+    # Install Docker CLI
+    && apt-get install -yq apt-transport-https ca-certificates curl gnupg-agent software-properties-common lsb-release unzip \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    && apt-get update \
+    && apt-get install -yq docker-ce-cli
+```
+
+また `devcontainer.json` の `mounts` は下記のようになります。
+
+```json
+{
+    "name": "ASP.NET Core DevEnv1",
+    "dockerFile": "Dockerfile",
+    "runArgs": [],
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "mounts": [
+      "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ],
+    "extensions": [
+      "ms-dotnettools.csharp",
+    ],
+    "forwardPorts":[5000, 5001],
+    "postCreateCommand": "dotnet restore src/demoapp.sln"
+}
+```
+
+この状態で Codespace を一度作り直してから VSCode を接続すると、開発コンテナのターミナルからホスト上で動作している全てのコンテナを操作することが可能です。
+まず現在実行している開発コンテナ（＝自分自身）を確認してみると、ホスト名とコンテナ名が一致しているので、VSCode から接続しているのが当該コンテナであることがわかります。
+
+```bash
+$ hostname
+codespaces_c772b8
+
+$ docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+4719de8b1073        cloudenvimage       "/bin/sh -c 'while s…"   3 hours ago         Up 3 hours                              codespaces_c772b8
+```
+
+では外部のコンテナを起動してみましょう。
+開発コンテナと並行して起動していることがわかりますね。
+
+```bash
+$ docker run -d -p 8888:80 nginx
+
+$ docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                  NAMES
+54f041ecc9df        nginx               "/docker-entrypoint.…"   2 minutes ago       Up 2 minutes        0.0.0.0:8888->80/tcp   musing_tharp
+4719de8b1073        cloudenvimage       "/bin/sh -c 'while s…"   3 hours ago         Up 3 hours                                 codespaces_c772b8
+
+$ curl http://localhost:8888
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+  ...
+
+```
